@@ -31,7 +31,7 @@ ANSWER_1 = '2'
 # Problem 2.1: Warm-Up Stretch
 
 def cube(x):
-    return x**2
+    return x**3
 
 def factorial(x):
     if x < 0:
@@ -54,15 +54,22 @@ def count_pattern(pattern, lst):
 # Problem 2.2: Expression depth
 
 def depth(expr):
-    if(isinstance(expr, list)):
+    if(isinstance(expr, (list, tuple))):
+        if not expr:
+            return 0
 
+        return max(1 + depth(expr[0]), depth(expr[1:]))
     else:
-
+        return 0
 
 # Problem 2.3: Tree indexing
 
 def tree_ref(tree, index):
-    raise NotImplementedError
+    if not index:
+        return tree
+
+    return tree_ref(tree[index[0]], index[1:])
+
 
 
 # Section 3: Symbolic algebra
