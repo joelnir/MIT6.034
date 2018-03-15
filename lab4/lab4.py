@@ -15,9 +15,27 @@ def forward_checking(state, verbose=False):
     if not basic:
         return False
 
-    # Add your forward checking logic here.
-    
-    raise NotImplementedError
+    cur_var = state.get_current_variable()
+    if(cur_var == None):
+        return True # at root
+
+    ass_val = cur_var.get_assigned_value()
+    constraints = state.get_constraints_by_name(cur_var.get_name())
+
+    for const in constraints:
+        if(const.get_variable_i_name() == cur_var.get_name()):
+            other_var = state.get_variable_by_name(const.get_variable_j_name())
+            other_domain = other_var.get_domain()
+
+            for other_val in other_domain:
+                if( not const.check(state, value_i=ass_val, value_j=other_val)):
+                    other_var.reduce_domain(other_val)
+
+                    if(other_var.domain_size() == 0):
+                        return False
+
+    return True
+
 
 # Now Implement forward checking + (constraint) propagation through
 # singleton domains.
@@ -27,8 +45,38 @@ def forward_checking_prop_singleton(state, verbose=False):
     if not fc_checker:
         return False
 
-    # Add your propagate singleton logic here.
-    raise NotImplementedError
+    queue = [var for var in state.get_all_variables()
+                        if var.domain_size() == 1]
+    visited = [] # list of vissited singleton variables
+
+    while(len(queue) > 0):
+        #pop
+        cur_var = queue[0]
+        queue = queue[1:]
+        visited.append(cur_var)
+
+        singleton_val = cur_var.get_domain()[0]
+        constraints = state.get_constraints_by_name(cur_var.get_name())
+
+        for const in constraints:
+            if(const.get_variable_i_name() == cur_var.get_name()):
+                other_var = state.get_variable_by_name(const.get_variable_j_name())
+                other_domain = other_var.get_domain()
+
+                for other_val in other_domain:
+                    if( not const.check(state, value_i=singleton_val,
+                            value_j=other_val)):
+                        other_var.reduce_domain(other_val)
+
+                        if(other_var.domain_size() == 0):
+                            return False
+
+                if(other_var.domain_size() == 1 and
+                    (not other_var in visited) and
+                    (not other_var in queue)):
+                    queue.append(other_var)
+
+    return True
 
 ## The code here are for the tester
 ## Do not change.
@@ -112,11 +160,11 @@ def limited_house_classifier(house_people, house_votes, n, verbose = False):
         print CongressIDTree(house_limited_group2, house_limited_votes,
                              information_disorder)
         print
-        
+
     return evaluate(idtree_maker(house_limited_votes, information_disorder),
                     house_limited_group1, house_limited_group2)
 
-                                   
+
 ## Find a value of n that classifies at least 430 representatives correctly.
 ## Hint: It's not 10.
 N_1 = 10
@@ -145,5 +193,3 @@ def eval_test(eval_fn, group1, group2, verbose = 0):
         return evaluate(globals()[eval_fn], group1, group2, verbose)
     else:
         raise Exception, "Error: Tester tried to use an invalid evaluation function: '%s'" % eval_fn
-
-    
