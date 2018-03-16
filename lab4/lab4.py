@@ -117,17 +117,17 @@ senate_group1, senate_group2 = crosscheck_groups(senate_people)
 ## computes Hamming distances.
 
 def euclidean_distance(list1, list2):
-    # this is not the right solution!
-    return hamming_distance(list1, list2)
+    diffs = [(val[0] - val[1])**2 for val in zip(list1, list2)]
+    return math.sqrt(sum(diffs))
 
 #Once you have implemented euclidean_distance, you can check the results:
-#evaluate(nearest_neighbors(euclidean_distance, 1), senate_group1, senate_group2)
+#evaluate(nearest_neighbors(euclidean_distance, 1), senate_group1, senate_group2, verbose=1)
 
 ## By changing the parameters you used, you can get a classifier factory that
 ## deals better with independents. Make a classifier that makes at most 3
 ## errors on the Senate.
 
-my_classifier = nearest_neighbors(hamming_distance, 1)
+my_classifier = nearest_neighbors(euclidean_distance, 5)
 #evaluate(my_classifier, senate_group1, senate_group2, verbose=1)
 
 ### Part 2: ID Trees
@@ -136,8 +136,33 @@ my_classifier = nearest_neighbors(hamming_distance, 1)
 ## Now write an information_disorder function to replace homogeneous_disorder,
 ## which should lead to simpler trees.
 
+def set_disorder(values):
+    total = len(values)
+    counts = {}
+
+    #Count values of each kind
+    for val in values:
+        if(val in counts):
+            counts[val] += 1
+        else:
+            counts[val] = 1
+
+    disorder = 0
+    for key in counts:
+        count = counts[key]
+        disorder -= (float(count)/total) * math.log((float(count)/total), 2)
+
+    return disorder
+
 def information_disorder(yes, no):
-    return homogeneous_disorder(yes, no)
+    total = len(yes) + len(no)
+
+    yes_disorder = set_disorder(yes)
+    no_disorder = set_disorder(no)
+
+    disorder = ((float(len(yes))/total)*yes_disorder) +\
+                    ((float(len(no))/total)*no_disorder)
+    return disorder
 
 #print CongressIDTree(senate_people, senate_votes, information_disorder)
 #evaluate(idtree_maker(senate_votes, homogeneous_disorder), senate_group1, senate_group2)
@@ -167,22 +192,22 @@ def limited_house_classifier(house_people, house_votes, n, verbose = False):
 
 ## Find a value of n that classifies at least 430 representatives correctly.
 ## Hint: It's not 10.
-N_1 = 10
+N_1 = 44
 rep_classified = limited_house_classifier(house_people, house_votes, N_1)
 
 ## Find a value of n that classifies at least 90 senators correctly.
-N_2 = 10
+N_2 = 67
 senator_classified = limited_house_classifier(senate_people, senate_votes, N_2)
 
 ## Now, find a value of n that classifies at least 95 of last year's senators correctly.
-N_3 = 10
+N_3 = 23
 old_senator_classified = limited_house_classifier(last_senate_people, last_senate_votes, N_3)
 
 
 ## The standard survey questions.
-HOW_MANY_HOURS_THIS_PSET_TOOK = ""
-WHAT_I_FOUND_INTERESTING = ""
-WHAT_I_FOUND_BORING = ""
+HOW_MANY_HOURS_THIS_PSET_TOOK = "1"
+WHAT_I_FOUND_INTERESTING = "1"
+WHAT_I_FOUND_BORING = "1"
 
 
 ## This function is used by the tester, please don't modify it!
