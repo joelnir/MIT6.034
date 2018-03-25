@@ -57,21 +57,21 @@ class Input(ValuedElement,DifferentiableElement):
     def output(self):
         """
         Returns the output of this Input node.
-        
+
         returns: number (float or int)
         """
-        raise NotImplementedError, "Implement me!"
+        return self.get_value()
 
     def dOutdX(self, elem):
         """
-        Returns the derivative of this Input node with respect to 
+        Returns the derivative of this Input node with respect to
         elem.
 
         elem: an instance of Weight
 
         returns: number (float or int)
         """
-        raise NotImplementedError, "Implement me!"
+        return 0
 
 class Weight(ValuedElement):
     """
@@ -170,7 +170,19 @@ class Neuron(DifferentiableElement):
 
         returns: number (float or int)
         """
-        raise NotImplementedError, "Implement me!"
+        weights = self.get_weights()
+        inputs = self.get_inputs()
+
+        sum = 0
+
+        for i in range(len(weights)):
+            sum += weights[i].get_value() * inputs[i].output()
+
+        #print("sum: " + str(sum))
+
+        sigm = 1.0/(1.0 + (math.exp((-1)*sum)))
+
+        return sigm
 
     def dOutdX(self, elem):
         # Implement compute_doutdx instead!!
@@ -190,7 +202,30 @@ class Neuron(DifferentiableElement):
 
         returns: number (float/int)
         """
-        raise NotImplementedError, "Implement me!"
+        # Direct connected weight
+        if(self.has_weight(elem)):
+            index = self.get_weights().index(elem)
+            inp = self.get_inputs()[index].output()
+            output = self.output()
+            #print("Index: " + str(index) + " input: " + str(inp) + " output: " + str(output))
+
+            return inp * output * (1 - output)
+        # Weight is not directly connected
+        else:
+            into_sigm = 0
+
+            for i in range(len(self.get_weights())):
+                weight = self.get_weights()[i]
+
+                if(self.isa_descendant_weight_of(elem, weight)):
+                    inp = self.get_inputs()[i]
+                    into_sigm += weight.get_value() * inp.dOutdX(elem)
+
+            #print("into_sigm: " + str(into_sigm))
+
+            output = self.output()
+
+            return output * (1 - output) * into_sigm
 
     def get_weights(self):
         return self.my_weights
@@ -222,10 +257,10 @@ class PerformanceElem(DifferentiableElement):
     def output(self):
         """
         Returns the output of this PerformanceElem node.
-        
+
         returns: number (float/int)
         """
-        raise NotImplementedError, "Implement me!"
+        return (-0.5) * ((self.my_desired_val - self.my_input.output())**2)
 
     def dOutdX(self, elem):
         """
@@ -236,7 +271,7 @@ class PerformanceElem(DifferentiableElement):
 
         returns: number (int/float)
         """
-        raise NotImplementedError, "Implement me!"
+        return (self.my_desired_val - self.my_input.output()) * self.my_input.dOutdX(elem)
 
     def set_desired(self,new_desired):
         self.my_desired_val = new_desired
@@ -278,11 +313,11 @@ def seed_random():
 
 def random_weight():
     """Generate a deterministic random weight"""
-    # We found that random.randrange(-1,2) to work well emperically 
+    # We found that random.randrange(-1,2) to work well emperically
     # even though it produces randomly 3 integer values -1, 0, and 1.
     return random.randrange(-1, 2)
 
-    # Uncomment the following if you want to try a uniform distribuiton 
+    # Uncomment the following if you want to try a uniform distribuiton
     # of random numbers compare and see what the difference is.
     # return random.uniform(-1, 1)
 
@@ -335,7 +370,31 @@ def make_neural_net_two_layer():
     See 'make_neural_net_basic' for required naming convention for inputs,
     weights, and neurons.
     """
-    raise NotImplementedError, "Implement me!"
+    i0 = Input('i0', -1.0) # this input is immutable
+    i1 = Input('i1', 0.0)
+    i2 = Input('i2', 0.0)
+
+    seed_random()
+
+    w1A = Weight('w1A', random_weight())
+    w1B = Weight('w1B', random_weight())
+    w2A = Weight('w2A', random_weight())
+    w2B = Weight('w2B', random_weight())
+    w0A = Weight('w0A', random_weight())
+    w0B = Weight('w0B', random_weight())
+    wAC = Weight('wAC', random_weight())
+    wBC = Weight('wBC', random_weight())
+    w0C = Weight('w0C', random_weight())
+
+
+    A = Neuron('A', [i0, i1, i2], [w0A, w1A, w2A])
+    B = Neuron('B', [i0, i1, i2], [w0B, w1B, w2B])
+    C = Neuron('C', [A, B], [wAC, wBC])
+
+    P = PerformanceElem(C, 0.0)
+
+    net = Network(P, [A, B, C])
+    return net
 
 def make_neural_net_challenging():
     """
@@ -347,7 +406,39 @@ def make_neural_net_challenging():
     weights, and neurons.
     """
 
-    raise NotImplementedError, "Implement me!"
+    i0 = Input('i0', -1.0) # this input is immutable
+    i1 = Input('i1', 0.0)
+    i2 = Input('i2', 0.0)
+
+    seed_random()
+
+    w1A = Weight('w1A', random_weight())
+    w1B = Weight('w1B', random_weight())
+    w2A = Weight('w2A', random_weight())
+    w2B = Weight('w2B', random_weight())
+    wAC = Weight('wAC', random_weight())
+    wAD = Weight('wAD', random_weight())
+    wBC = Weight('wBC', random_weight())
+    wBD = Weight('wBD', random_weight())
+    wCE = Weight('wCE', random_weight())
+    wDE = Weight('wDE', random_weight())
+    w0A = Weight('w0A', random_weight())
+    w0B = Weight('w0B', random_weight())
+    w0C = Weight('w0C', random_weight())
+    w0D = Weight('w0D', random_weight())
+    w0E = Weight('w0E', random_weight())
+
+
+    A = Neuron('A', [i0, i1, i2], [w0A, w1A, w2A])
+    B = Neuron('B', [i0, i1, i2], [w0B, w1B, w2B])
+    C = Neuron('C', [i0, A, B], [w0C, wAC, wBC])
+    D = Neuron('D', [i0, A, B], [w0D, wAD, wBD])
+    E = Neuron('E', [C, D], [wCE, wDE])
+
+    P = PerformanceElem(E, 0.0)
+
+    net = Network(P, [A, B, C, D, E])
+    return net
 
 def make_neural_net_with_weights():
     """
@@ -359,14 +450,24 @@ def make_neural_net_with_weights():
     """
     # You can preset weights for the network by completing
     # and uncommenting the init_weights dictionary below.
-    #
-    # init_weights = { 'w1A' : 0.0,
-    #                  'w2A' : 0.0,
-    #                  'w1B' : 0.0,
-    #                  'w2B' : 0.0,
-    #                  .... # finish me!
-    #
-    raise NotImplementedError, "Implement me!"
+
+    init_weights = {
+                        'w0A' : -3.82,
+                        'w1A' : 2.94,
+                        'w2A' : -2.86,
+                        'w0B' : 3.98,
+                        'w1B' : 2.89,
+                        'w2B' : -2.98,
+                        'w0C' : -1.78,
+                        'wAC' : -4.36,
+                        'wBC' : 4.36,
+                        'w0D' : 1.61,
+                        'wAD' : 4.18,
+                        'wBD' : -4.49,
+                        'wCE' : -6.89,
+                        'wDE' : 6.35
+                    }
+
     return make_net_with_init_weights_from_dict(make_neural_net_challenging,
                                                 init_weights)
 
@@ -418,6 +519,7 @@ def train(network,
 
             # compute all the weight updates
             for w in network.weights:
+                #print("doutdx " + str(network.performance.dOutdX(w)))
                 w.set_next_value(w.get_value() +
                                  rate * network.performance.dOutdX(w))
 
