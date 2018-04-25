@@ -143,7 +143,7 @@ class BoostClassifier(Classifier):
         correct class for a data point.
         """
         self.base_classifiers = base_classifiers
-        self.data = data 
+        self.data = data
         self.data_weights = [1.0/len(data) for d in data]
         self.classifiers = []
         self.standard = standard
@@ -161,8 +161,11 @@ class BoostClassifier(Classifier):
 
         returns: int (+1 or -1)
         """
-        # Fill me in! (the answer given is not correct!)
-        return 1
+        guess_sum = 0;
+        for pair in self.classifiers:
+            guess_sum += (pair[0].classify(obj) * pair[1])
+
+        return guess_sum/abs(guess_sum)
 
     def orange_classify(self, obj):
         """
@@ -266,8 +269,16 @@ class BoostClassifier(Classifier):
 
         returns: Nothing (only updates self.data_weights)
         """
-        # Fill me in!
-        pass
+        alpha = error_to_alpha(best_error)
+
+        for i in range(1,len(self.data)):
+            classification = best_classifier.classify(self.data[i])
+            correct_class = self.standard.classify(self.data[i])
+            correctness = (classification * correct_class) #-1 if different
+
+            self.data_weights[i] = (self.data_weights[i] * math.exp((-1) * correctness * alpha))
+
+        self.renormalize_weights
 
     def __str__(self):
         classifier_part = '\n'.join(["%4.4f: %s" % (weight, c) for c, weight in
