@@ -36,7 +36,8 @@ boost_1796 = BoostClassifier(make_vote_classifiers(house_1796_votes),
                              house_1796, standardPartyClassifier)
 
 # You will need to train it, however. You can change the number of steps here.
-boost_1796.train(20)
+boost_1796.train(100)
+print house_1796_votes[80]
 
 # Once you have run your boosting classifier for a sufficient number of steps
 # on the 4th House of Representatives data, it should tell you how it believes
@@ -69,12 +70,21 @@ def most_misclassified(classifier, n=5):
 	returns: list of data points (each passed through legislator_info) that were
 			 misclassified most often
     """
-    raise NotImplementedError
+    data_pairs = []
+
+    for i in range(len(classifier.data)):
+        data_pairs.append((classifier.data_weights[i], classifier.data[i]))
+
+    data_pairs.sort(key=(lambda a: a[0]))
+
+    return [legislator_info(data[1]) for data in data_pairs[:n]]
+
+
 
 # The following line is used by the tester; please leave it in place!
 most_misclassified_boost_1796 = lambda n: most_misclassified(boost_1796, n)
 
-# print most_misclassified_boost_1796(5)
+#print most_misclassified_boost_1796(5)
 
 # Now train a similar classifier on the 110th Senate (2007-2008).
 # How does it say a Republican would vote on Cardin Amdt No. 3930; To modify
@@ -92,7 +102,7 @@ republican_sunset_vote = 'answer yes or no'
 # The following line is used by the tester; please leave it in place!
 most_misclassified_boost = lambda n: most_misclassified(boost, n)
 
-# print most_misclassified_boost(5)
+#print most_misclassified_boost(5)
 
 
 
@@ -210,33 +220,35 @@ if __name__ == "__main__":
 
 # For the vampire dataset, what variable does the id tree query, that our
 # algorithm in class did not?
-vampires_idtree_odd = "one of: shadow garlic complexion accent"
+#vampires_idtree_odd = "one of: shadow garlic complexion accent"
+vampires_idtree_odd = "accent"
 
 # For the vampire dataset, which classifier does the worst when tested on just
 # the data on which it was trained?
-vampires_worst_on_training = 'one of: maj dt knn svml svmp3 svmr svms nb'
+#vampires_worst_on_training = 'one of: maj dt knn svml svmp3 svmr svms nb'
+vampires_worst_on_training = 'svm'
 # Is it actually doing badly, or is it just confused?
 
 # For the vampire dataset, which classifier does the worst when cross-validated?
-vampires_worst_on_test = 'one of: maj dt knn svml svmp3 svmr svms nb'
+vampires_worst_on_test = 'svmr'
 
 
 # Which of the above classifiers has the best Brier distance to the true answers
 # in ten-fold cross-validation for the H004 dataset?
 
-best_brier_for_h004 = 'one of: maj dt knn svml svmp3 svmr svms nb'
+best_brier_for_h004 = 'maj'
 
 # Just looking at the confusion matrices, what is the minimum number
 # of data points that must have been differently classified between
 # the best classifier and the second-best classifier for the H004 data
 # set?
 
-min_disagreement_h004 = None
+min_disagreement_h004 = 2
 
 # Which bill was the most divisive along party lines in the H004 data
 # set, according to the classification tree (id tree)?
 
-most_divisive_h004 = 'a bill number'
+most_divisive_h004 = '2'
 
 
 

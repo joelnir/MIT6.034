@@ -180,8 +180,10 @@ class BoostClassifier(Classifier):
 
         returns: float (between 0 and 1)
         """
-        # Fill me in! (the answer given is not correct!)
-        return 1
+        guess_sum = 0;
+        for pair in self.classifiers:
+            guess_sum += (pair[0].classify(obj) * pair[1])
+        return sigmoid(guess_sum)
 
     def best_classifier(self):
         """
